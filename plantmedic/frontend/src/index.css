@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest-green: #27500a;
+  --leaf-green: #639922;
+  --fresh-green: #97c459;
+  --lens-blue: #185fa5;
+  --mist-green: #eaf3de;
+  --off-white: #f8faf5;
+  --dark-text: #1c1c1a;
+  --muted-text: #5f5e5a;
+}
+
+@layer base {
+  html {
+    @apply antialiased text-earth-900 bg-leaf-50;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+  }
+  [dir='rtl'] {
+    font-family: theme('fontFamily.urdu');
+  }
+  body {
+    background: var(--off-white);
+    color: var(--dark-text);
+  }
+}
+
+@layer base {
+  :focus-visible {
+    outline: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .pm-card {
+    @apply rounded-2xl border border-leaf-200 bg-white shadow-sm;
+  }
+  .pm-card-hover {
+    @apply transition hover:-translate-y-0.5 hover:border-leaf-300 hover:shadow-md motion-reduce:transform-none;
+  }
+  
+  /* Responsive chat layout */
+  @media (max-width: 768px) {
+    .chat-sidebar {
+      display: none !important;
+    }
+    .flex.h-screen {
+      flex-direction: column;
+    }
+    .w-80 {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .border-r {
+      border-right: none !important;
+      border-bottom: 1px solid #e0e8dc !important;
+    }
+    .max-w-3xl {
+      max-width: 100% !important;
+    }
+    .max-w-xs {
+      max-width: 85% !important;
+    }
+    .lg\:max-w-md {
+      max-width: 85% !important;
+    }
+  }
+  .pm-surface {
+    @apply rounded-2xl border border-leaf-200 bg-white shadow-sm;
+  }
+  .pm-btn {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-xl px-6 py-3 font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .pm-btn-primary {
+    @apply pm-btn bg-leaf-600 text-white shadow hover:bg-leaf-700;
+  }
+  .pm-btn-secondary {
+    @apply pm-btn border border-leaf-200 bg-white text-earth-800 shadow-sm hover:bg-leaf-50;
+  }
+  .pm-chip {
+    @apply inline-flex items-center rounded-full border border-leaf-200 bg-white/80 px-3 py-1 text-sm font-medium text-earth-800 shadow-sm;
+  }
+  .pm-navlink {
+    @apply inline-flex min-h-[44px] items-center rounded-xl px-3 py-2 text-sm font-semibold text-earth-800 transition hover:bg-leaf-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf-500;
+  }
+  .pm-navlink-active {
+    @apply bg-leaf-100 text-leaf-900;
+  }
+}
