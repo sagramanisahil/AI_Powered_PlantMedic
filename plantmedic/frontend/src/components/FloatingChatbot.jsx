@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { sendChatMessage } from '../api'
+import { useLanguage } from '../LanguageContext'
+import { t } from '../translations'
 
 // Replace **text** with <strong>text</strong>
 const formatMessage = (text) => {
   return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
 }
 
-const initialMessage = {
-  role: 'assistant',
-  content: 'Assalam-o-Alaikum! I am LeafLens AI Assistant. Ask me about diagnosis results, disease guidance, or how to use LeafLens.',
-  timestamp: new Date()
-}
-
 export default function FloatingChatbot() {
+  const { lang, isUrdu } = useLanguage()
+  const initialMessage = {
+    role: 'assistant',
+    content: t('chatbotGreeting', lang),
+    timestamp: new Date()
+  }
+
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -60,7 +63,7 @@ export default function FloatingChatbot() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#27500A] to-[#639922] text-white shadow-xl transition hover:scale-105"
-        aria-label="Toggle LeafLens AI assistant"
+        aria-label={t('chatbotToggleAria', lang)}
       >
         <span className="text-xl">💬</span>
       </button>
@@ -72,8 +75,8 @@ export default function FloatingChatbot() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-leaf-200 px-5 py-4">
-            <h2 className="text-lg font-semibold text-leaf-900">LeafLens AI Assistant</h2>
-            <button onClick={() => setOpen(false)} className="pm-btn-secondary min-h-[38px] px-3 py-1 text-sm">Close</button>
+            <h2 className={`text-lg font-semibold text-leaf-900 ${isUrdu ? 'font-urdu' : ''}`}>{t('chatbotTitle', lang)}</h2>
+            <button onClick={() => setOpen(false)} className="pm-btn-secondary min-h-[38px] px-3 py-1 text-sm">{t('chatbotClose', lang)}</button>
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto bg-leaf-50/30 p-4">
@@ -114,7 +117,7 @@ export default function FloatingChatbot() {
                   fontSize: "14px",
                   lineHeight: "1.5"
                 }}>
-                  LeafLens AI is typing...
+                  {t('chatbotTyping', lang)}
                 </div>
               </div>
             )}
@@ -127,11 +130,11 @@ export default function FloatingChatbot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && send()}
-                placeholder="Ask LeafLens..."
+                placeholder={t('chatbotPlaceholder', lang)}
                 className="min-h-[44px] flex-1 rounded-xl border border-leaf-200 px-3 py-2 outline-none focus:ring-2 focus:ring-leaf-500"
               />
               <button onClick={send} disabled={!canSend} className="pm-btn-primary min-h-[44px] px-5">
-                Send
+                {t('chatbotSend', lang)}
               </button>
             </div>
           </div>

@@ -73,10 +73,10 @@ export default function Layout({ children }) {
                   {t('navDiagnose', lang)}
                 </NavLink>
                 <NavLink to="/chat" className={navClass}>
-                  AI Chat
+                  {t('navChat', lang)}
                 </NavLink>
                 <NavLink to="/dashboard" className={navClass}>
-                  Dashboard
+                  {t('navDashboard', lang)}
                 </NavLink>
                 <NavLink to="/about" className={navClass}>
                   {t('navAbout', lang)}
@@ -84,18 +84,18 @@ export default function Layout({ children }) {
                 <LanguageToggle className="ms-1" />
                 {loading ? (
                   <div className="pm-btn-secondary px-4 py-2 text-xs">
-                    Loading...
+                    {t('loading', lang)}
                   </div>
                 ) : user ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-earth-600">Welcome, {user.name}</span>
+                    <span className="text-sm text-earth-600">{t('welcomePrefix', lang)} {user.name}</span>
                     <button className="pm-btn-secondary px-3 py-1 text-xs" onClick={handleSignOut}>
-                      Sign Out
+                      {t('signOut', lang)}
                     </button>
                   </div>
                 ) : (
                   <Link to="/signin" className="pm-btn-primary px-4 py-2 text-xs">
-                    Sign In
+                    {t('signIn', lang)}
                   </Link>
                 )}
               </nav>
@@ -130,26 +130,26 @@ export default function Layout({ children }) {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           <div>
             <p className="text-lg font-bold"><span className="text-[#97C459]">Leaf</span><span className="text-[#185FA5] font-light">Lens</span></p>
-            <p className="mt-3 text-sm text-white/70">See what your crops need</p>
+            <p className="mt-3 text-sm text-white/70">{t('footerTaglineShort', lang)}</p>
           </div>
           <div>
-            <p className="font-semibold">Quick Links</p>
+            <p className="font-semibold">{t('footerQuickLinks', lang)}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/70">
-              <Link to="/">Home</Link>
-              <Link to="/chat">AI Chat</Link>
-              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/">{t('navHome', lang)}</Link>
+              <Link to="/chat">{t('navChat', lang)}</Link>
+              <Link to="/dashboard">{t('navDashboard', lang)}</Link>
             </div>
           </div>
           <div>
-            <p className="font-semibold">Resources</p>
+            <p className="font-semibold">{t('footerResources', lang)}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/70">
-              <Link to="/about">About</Link>
+              <Link to="/about">{t('navAbout', lang)}</Link>
               <Link to="/privacy-policy">Privacy Policy</Link>
               <Link to="/terms-of-service">Terms of Service</Link>
             </div>
           </div>
           <div>
-            <p className="font-semibold">Support</p>
+            <p className="font-semibold">{t('footerSupport', lang)}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/70">
               <Link to="/help-center">Help Center</Link>
               <Link to="/faqs">FAQs</Link>

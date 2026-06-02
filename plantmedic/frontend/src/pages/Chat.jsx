@@ -51,18 +51,41 @@ export default function Chat() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(false)
       if (!firebaseUser) {
-        navigate('/signin')
+        // Allow anonymous access to Chat: load local chat history and continue
+        setUser(null)
+        const history = getChatHistory()
+        if (history.length > 0) {
+          const defaultConv = {
+            id: 'default',
+            title: 'Chat with LeafLens AI',
+            messages: history,
+            createdAt: Date.now()
+          }
+          setConversations([defaultConv])
+          setActiveConversation(defaultConv)
+          setMessages(history)
+        } else {
+          const newConv = {
+            id: 'default',
+            title: 'New Chat',
+            messages: [starter],
+            createdAt: Date.now()
+          }
+          setConversations([newConv])
+          setActiveConversation(newConv)
+          setMessages([starter])
+          saveChatHistory([starter])
+        }
         return
       }
-      
+
+      // Authenticated user: load Firestore-backed chat history (with fallback to localStorage)
       setUser({
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
         photoURL: firebaseUser.photoURL
       })
-      
-      // Load chat history from Firestore
       try {
         const firestoreConvs = await loadChatsFromFirestore(firebaseUser.uid)
         if (firestoreConvs.length > 0) {
@@ -70,7 +93,6 @@ export default function Chat() {
           setActiveConversation(firestoreConvs[0])
           setMessages(firestoreConvs[0].messages || [])
         } else {
-          // Fallback to localStorage if Firestore is empty
           const history = getChatHistory()
           if (history.length > 0) {
             const defaultConv = {
@@ -96,7 +118,6 @@ export default function Chat() {
         }
       } catch (error) {
         console.error('Error loading from Firestore, using localStorage:', error)
-        // Fallback to localStorage
         const history = getChatHistory()
         if (history.length > 0) {
           const defaultConv = {
@@ -144,33 +165,40 @@ export default function Chat() {
   }
 
   const push = async (message) => {
-    if (!user) return
     if (!activeConversation) {
       await createNewChat()
     }
     if (!activeConversation) return
-    
+
     const updatedMessages = [...(activeConversation.messages || []), message]
-    
+
     // Generate title from first user message
     const firstUserMsg = updatedMessages.find(m => m.role === "user")
     const title = firstUserMsg?.content?.substring(0, 35) || "New Chat"
-    
+
     const updatedConv = {
       ...activeConversation,
       title,
       messages: updatedMessages,
       updatedAt: Date.now()
     }
-    
+
+    // Update UI immediately
+    setActiveConversation(updatedConv)
+    setConversations(prev => prev.map(conv => 
+      conv.id === activeConversation.id ? updatedConv : conv
+    ))
+    setMessages(updatedMessages)
+
+    // Persist: to Firestore if logged in, otherwise to localStorage
     try {
-      await saveChatToFirestore(user.uid, activeConversation.id, updatedMessages)
-      setActiveConversation(updatedConv)
-      setConversations(prev => prev.map(conv => 
-        conv.id === activeConversation.id ? updatedConv : conv
-      ))
+      if (user) {
+        await saveChatToFirestore(user.uid, activeConversation.id, updatedMessages)
+      } else {
+        saveChatHistory(updatedMessages)
+      }
     } catch (error) {
-      console.error('Failed to save to Firestore:', error)
+      console.error('Failed to persist chat:', error)
     }
   }
 
@@ -196,12 +224,21 @@ export default function Chat() {
       setMessages(prev => [...prev, aiMessage])
       
       // Save to Firestore if user is logged in
-      if (user && activeConversation) {
-        try {
-          const updatedMessages = [...messages, userMessage, aiMessage]
-          await saveChatToFirestore(user.uid, activeConversation.id, updatedMessages)
-        } catch (error) {
-          console.error('Failed to save chat to Firestore:', error)
+      if (activeConversation) {
+        const updatedMessages = [...(activeConversation.messages || messages), userMessage, aiMessage]
+        if (user) {
+          try {
+            await saveChatToFirestore(user.uid, activeConversation.id, updatedMessages)
+          } catch (error) {
+            console.error('Failed to save chat to Firestore:', error)
+          }
+        } else {
+          // persist locally for anonymous users
+          try {
+            saveChatHistory(updatedMessages)
+          } catch (err) {
+            console.error('Failed to save chat to localStorage:', err)
+          }
         }
       }
     } catch (err) {

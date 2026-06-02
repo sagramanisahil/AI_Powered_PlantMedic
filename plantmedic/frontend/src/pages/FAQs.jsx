@@ -109,7 +109,7 @@ export default function FAQs() {
                     className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-leaf-50 transition-colors"
                   >
                     <span className={`font-medium text-leaf-800 ${isUr ? 'font-urdu' : ''}`}>
-                      {faq.question}
+                      {isUr ? faq.questionUr : faq.questionEn}
                     </span>
                     <svg
                       className={`w-5 h-5 text-leaf-600 transition-transform ${
@@ -179,18 +179,10 @@ export default function FAQs() {
               Popular Topics
             </h2>
             <div className="flex flex-wrap gap-2">
-              {[
-                'Account Setup',
-                'Camera Issues',
-                'Pricing',
-                'Data Privacy',
-                'Plant Types',
-                'Accuracy',
-                'Troubleshooting',
-                'Mobile App',
-                'API Access',
-                'Partnerships'
-              ].map((topic) => (
+              {(isUr
+                ? ['اکاؤنٹ سیٹ اپ','کیمرہ مسائل','قیمتیں','ڈیٹا رازداری','پودے کی اقسام','درستگی','مسائل کا حل','موبائل ایپ','API رسائی','شراکتداری']
+                : ['Account Setup','Camera Issues','Pricing','Data Privacy','Plant Types','Accuracy','Troubleshooting','Mobile App','API Access','Partnerships']
+              ).map((topic) => (
                 <button
                   key={topic}
                   className="px-4 py-2 bg-leaf-100 hover:bg-leaf-200 text-leaf-700 rounded-full text-sm font-medium transition-colors"

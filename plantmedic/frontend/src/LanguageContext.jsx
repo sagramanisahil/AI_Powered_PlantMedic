@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { t } from './translations'
 
 const STORAGE_KEY = 'leaflens-lang'
 
@@ -27,6 +28,15 @@ export function LanguageProvider({ children }) {
     }
     document.documentElement.lang = lang === 'ur' ? 'ur' : 'en'
     document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr'
+    // Update document title and meta description to match selected language
+    try {
+      const title = `${t('appName', lang)} — ${t('heroTaglineEn', lang)}`
+      document.title = title
+      const meta = document.querySelector('meta[name="description"]')
+      if (meta) meta.setAttribute('content', t('heroIntro', lang))
+    } catch (e) {
+      // ignore
+    }
   }, [lang])
 
   // Listen for language changes across tabs

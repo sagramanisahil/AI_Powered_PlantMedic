@@ -71,10 +71,10 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 md:grid-cols-4">
           {[
-            { number: '38', label: lang === 'ur' ? 'اقسام پودوں' : 'Plant Species', icon: '🌱' },
-            { number: '88%', label: lang === 'ur' ? 'Train Accuracy' : 'Training Accuracy', icon: '📈' },
-            { number: '94%', label: lang === 'ur' ? 'ٹیسٹ درستی — MobileNetV2' : 'Testing Accuracy — MobileNetV2', icon: '🔬' },
-            { number: 'Rural Pakistan', label: lang === 'ur' ? 'علاقہ: سندھ و پنجاب' : 'Region: Sindh & Punjab', icon: '📍' }
+            { number: '38', label: t('statPlants', lang), icon: '🌱' },
+            { number: '88%', label: t('statTrainAcc', lang), icon: '📈' },
+            { number: '94%', label: t('statTestAcc', lang) + ' — MobileNetV2', icon: '🔬' },
+            { number: t('statRegion', lang).startsWith('Region') ? 'Rural Pakistan' : t('statRegion', lang), label: t('statRegion', lang), icon: '📍' }
           ].map((stat, index) => (
             <div key={index} className="text-center pm-card p-8">
               <div className="text-4xl mb-4">{stat.icon}</div>
