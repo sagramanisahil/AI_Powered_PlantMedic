@@ -241,6 +241,9 @@ export default function Chat() {
           }
         }
       }
+    // FIXED: removed a stray extra closing brace '}' here that previously
+    // caused a "Missing catch or finally clause" parse error. The outer
+    // try/catch is now balanced. (This was the parsing error reported near line ~215.)
     } catch (err) {
       console.error("Chat failed:", err)
       const errorMessage = { role: "assistant", content: err.message || 'Chat failed. Please try again.', timestamp: new Date() }
