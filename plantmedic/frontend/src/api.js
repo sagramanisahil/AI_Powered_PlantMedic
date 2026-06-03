@@ -1,7 +1,7 @@
 const DEFAULT_BASE = 'http://localhost:8000'
 
 export const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-export const GROQ_KEY = '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'
+export const GROQ_KEY = import.meta.env.VITE_GROQ_KEY
 
 export function getApiBase() {
   const fromEnv = import.meta.env.VITE_API_BASE_URL
