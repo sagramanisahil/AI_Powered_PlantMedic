@@ -1,4 +1,4 @@
-# LeafLens Backend (FastAPI)
+<!-- # LeafLens Backend (FastAPI)
 
 This backend matches the frontend contract used in `src/api.js`.
 
@@ -45,4 +45,13 @@ CLASS_NAMES_PATH=class_names.json
 # Get free API key from: https://aistudio.google.com/app/apikey
 GEMINI_API_KEY=your_key_here
 ```
+ -->
 
+---
+title: AI Powered PlantMedic
+emoji: 🌿
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+---
