@@ -4,13 +4,13 @@ import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, o
 
 // Firebase configuration - prefer Vite env vars in production, fallback to current values
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDRNM7KpH83BMQWoEyVZXGqSdAmmQfQHj0",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "leaflens-81f54.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "leaflens-81f54",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "leaflens-81f54.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1039809872546",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1039809872546:web:f3ff3c2ae148feb485cdfb",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-G1V7E32824"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 }
 
 // Initialize Firebase
