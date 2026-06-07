@@ -64,13 +64,13 @@ The model was trained on over 54,000 images, enabling accurate disease classific
 
 ### Training Curves
 
-![Training Curves](assets/training_curves.png)
+
 
 The model was trained in two phases — a frozen base phase followed by fine-tuning starting at epoch 9. Both accuracy and F1 score improved steadily after fine-tuning, with training accuracy reaching ~94% and validation accuracy stabilizing around 88%.
 
 ### Confusion Matrix
 
-![Confusion Matrix](assets/confusion_matrix.png)
+<img width="405" height="364" alt="image" src="https://github.com/user-attachments/assets/0110729d-32d9-4914-a73c-76d943ccd492" />
 
 The confusion matrix across all 38 classes shows a strong diagonal, indicating accurate classification for the majority of diseases. Most misclassifications occur within visually similar Tomato disease classes (e.g., Late Blight vs. Spider Mites), which is expected given their overlapping visual symptoms.
 
