@@ -42,7 +42,40 @@ The model was trained on over 54,000 images, enabling accurate disease classific
 
 ##  Results
 
--  Trained on 54,000+ labeled plant disease images**
+### Dataset & Training Overview
+
+| Property | Value |
+|----------|-------|
+| Training Images | 54,000+ |
+| Disease Classes | 38 |
+| Base Model | MobileNetV2 (ImageNet weights) |
+| Total Epochs | 30 |
+| Fine-tuning Start | Epoch 9 |
+
+### Model Performance (Test Set)
+
+| Metric | Score |
+|--------|-------|
+| Training Accuracy | ~94% |
+| Validation Accuracy | ~88% |
+| Validation F1 Score | ~0.88 |
+| Precision | ~0.91 |
+| Recall | ~0.88 |
+
+### Training Curves
+
+![Training Curves](assets/training_curves.png)
+
+The model was trained in two phases — a frozen base phase followed by fine-tuning starting at epoch 9. Both accuracy and F1 score improved steadily after fine-tuning, with training accuracy reaching ~94% and validation accuracy stabilizing around 88%.
+
+### Confusion Matrix
+
+![Confusion Matrix](assets/confusion_matrix.png)
+
+The confusion matrix across all 38 classes shows a strong diagonal, indicating accurate classification for the majority of diseases. Most misclassifications occur within visually similar Tomato disease classes (e.g., Late Blight vs. Spider Mites), which is expected given their overlapping visual symptoms.
+
+## Other Highlights
+-  Trained on 54,000+ labeled plant disease images
 -  Classifies 38 distinct plant diseases** across multiple crop types
 -  Sub-second inference time per image
 -  Bilingual output — English + Urdu
