@@ -63,8 +63,7 @@ The model was trained on over 54,000 images, enabling accurate disease classific
 | Recall | ~0.88 |
 
 ### Training Curves
-
-
+<img width="476" height="341" alt="image" src="https://github.com/user-attachments/assets/b75e6662-13e6-4d3e-813c-846e408fcca9" />
 
 The model was trained in two phases — a frozen base phase followed by fine-tuning starting at epoch 9. Both accuracy and F1 score improved steadily after fine-tuning, with training accuracy reaching ~94% and validation accuracy stabilizing around 88%.
 
