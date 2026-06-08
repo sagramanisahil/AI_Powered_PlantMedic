@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useLanguage } from '../LanguageContext'
 import { clearCurrentUser, getCurrentUser, setCurrentUser } from '../storage'
-import { auth } from '../firebase'
+import { auth, firebaseInitError } from '../firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { t } from '../translations'
 import FloatingChatbot from './FloatingChatbot'
@@ -27,27 +27,55 @@ export default function Layout({ children }) {
   }, [location.pathname])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // If Firebase `auth` failed to initialize, skip attaching listeners
+    if (!auth) {
       setLoading(false)
-      if (firebaseUser) {
-        const userData = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          photoURL: firebaseUser.photoURL
-        }
-        setUser(userData)
-        setCurrentUser(userData)
-      } else {
-        setUser(null)
-        clearCurrentUser()
-      }
-    })
+      setUser(null)
+      clearCurrentUser()
+      return
+    }
 
-    return () => unsubscribe()
+    let unsubscribe = () => {}
+    try {
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setLoading(false)
+        if (firebaseUser) {
+          const userData = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            photoURL: firebaseUser.photoURL
+          }
+          setUser(userData)
+          setCurrentUser(userData)
+        } else {
+          setUser(null)
+          clearCurrentUser()
+        }
+      })
+    } catch (e) {
+      console.error('Auth listener error:', e)
+      setLoading(false)
+      setUser(null)
+      clearCurrentUser()
+    }
+
+    return () => {
+      try {
+        unsubscribe()
+      } catch (e) {
+        // ignore
+      }
+    }
   }, [])
 
   const handleSignOut = async () => {
+    if (!auth) {
+      // If auth isn't initialized just navigate home
+      navigate('/')
+      return
+    }
+
     try {
       await signOut(auth)
       navigate('/')
@@ -58,6 +86,13 @@ export default function Layout({ children }) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {firebaseInitError && (
+        <div className="w-full bg-yellow-100 border-b border-yellow-200 text-yellow-900 text-sm">
+          <div className="mx-auto max-w-6xl px-4 py-2">
+            Firebase not configured: {firebaseInitError}. To enable Google sign-in, set VITE_FIREBASE_* env vars and add localhost to OAuth authorized domains.
+          </div>
+        </div>
+      )}
       <header className="relative z-10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">

@@ -32,6 +32,7 @@ const starter = {
 export default function Chat() {
   const navigate = useNavigate()
   const galleryInputRef = useRef(null)
+  const messagesEndRef = useRef(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [conversations, setConversations] = useState([])
@@ -48,35 +49,71 @@ export default function Chat() {
   const report = getLastReport()
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, messageLoading])
+
+  useEffect(() => {
+    if (!auth) {
+      // No firebase: treat as anonymous
       setLoading(false)
-      if (!firebaseUser) {
-        // Allow anonymous access to Chat: load local chat history and continue
-        setUser(null)
-        const history = getChatHistory()
-        if (history.length > 0) {
-          const defaultConv = {
-            id: 'default',
-            title: 'Chat with LeafLens AI',
-            messages: history,
-            createdAt: Date.now()
-          }
-          setConversations([defaultConv])
-          setActiveConversation(defaultConv)
-          setMessages(history)
-        } else {
-          const newConv = {
-            id: 'default',
-            title: 'New Chat',
-            messages: [starter],
-            createdAt: Date.now()
-          }
-          setConversations([newConv])
-          setActiveConversation(newConv)
-          setMessages([starter])
-          saveChatHistory([starter])
+      setUser(null)
+      const history = getChatHistory()
+      if (history.length > 0) {
+        const defaultConv = {
+          id: 'default',
+          title: 'Chat with LeafLens AI',
+          messages: history,
+          createdAt: Date.now()
         }
-        return
+        setConversations([defaultConv])
+        setActiveConversation(defaultConv)
+        setMessages(history)
+      } else {
+        const newConv = {
+          id: 'default',
+          title: 'New Chat',
+          messages: [starter],
+          createdAt: Date.now()
+        }
+        setConversations([newConv])
+        setActiveConversation(newConv)
+        setMessages([starter])
+        saveChatHistory([starter])
+      }
+      return
+    }
+
+    let unsubscribe = () => {}
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setLoading(false)
+        if (!firebaseUser) {
+        // Allow anonymous access to Chat: load local chat history and continue
+          setUser(null)
+          const history = getChatHistory()
+          if (history.length > 0) {
+            const defaultConv = {
+              id: 'default',
+              title: 'Chat with LeafLens AI',
+              messages: history,
+              createdAt: Date.now()
+            }
+            setConversations([defaultConv])
+            setActiveConversation(defaultConv)
+            setMessages(history)
+          } else {
+            const newConv = {
+              id: 'default',
+              title: 'New Chat',
+              messages: [starter],
+              createdAt: Date.now()
+            }
+            setConversations([newConv])
+            setActiveConversation(newConv)
+            setMessages([starter])
+            saveChatHistory([starter])
+          }
+          return
       }
 
       // Authenticated user: load Firestore-backed chat history (with fallback to localStorage)
@@ -142,8 +179,15 @@ export default function Chat() {
         }
       }
     })
+    } catch (e) {
+      console.error('Auth listener setup failed in Chat:', e)
+    }
 
-    return () => unsubscribe()
+    return () => {
+      try {
+        unsubscribe()
+      } catch (e) {}
+    }
   }, [navigate])
 
   const createNewChat = () => {
@@ -281,7 +325,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="chat-layout flex -mx-4 h-[calc(100dvh-13rem)] min-h-[480px] overflow-hidden sm:-mx-6">
       {/* Sidebar */}
       <div className="w-80 border-r border-leaf-200 bg-white flex flex-col">
         <div className="p-6 border-b border-leaf-200">
@@ -355,6 +399,7 @@ export default function Chat() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 import numpy as np
 from PIL import Image
 import io
@@ -134,6 +135,50 @@ def validate_image_is_leaf(image_bytes: bytes) -> bool:
 
     except Exception:
         return False
+
+
+# ─────────────────────────────────────────────
+# Chat (rule-based fallback when no LLM key is configured)
+# ─────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=4000)
+    context: dict = Field(default_factory=dict)
+
+
+def _chat_fallback(message: str, context: dict | None = None) -> str:
+    context = context or {}
+    report = context.get("report") if isinstance(context.get("report"), dict) else None
+    if report and report.get("disease"):
+        disease = report.get("disease", "Unknown")
+        confidence = report.get("confidence", "N/A")
+        treatment = report.get("treatment_en") or "Consult a local agricultural expert."
+        return (
+            f"Based on your scan ({disease}, confidence {confidence}):\n\n"
+            f"{treatment}\n\n"
+            "Ask follow-up questions about watering, fertilizer, or prevention."
+        )
+
+    q = (message or "").lower()
+    if any(k in q for k in ["healthy", "health", "percentage", "percent"]):
+        return (
+            "Upload a clear leaf image on the Diagnose page. "
+            "LeafLens will show disease name, confidence, and health score."
+        )
+    if any(k in q for k in ["treatment", "treat", "medicine", "spray", "fertiliz"]):
+        return (
+            "Scan your leaf on the Diagnose page first. "
+            "I can then explain the disease and suggest practical treatment steps."
+        )
+    return (
+        "I am LeafLens AI Assistant. Upload a leaf image in Diagnose for disease detection, "
+        "treatment guidance, and health percentage. You can also ask about crop care."
+    )
+
+
+@app.post("/chat")
+async def chat(payload: ChatRequest):
+    return {"response": _chat_fallback(payload.message, payload.context)}
 
 
 # ─────────────────────────────────────────────

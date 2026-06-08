@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    // Listen on all interfaces so both localhost and 127.0.0.1 work (Firebase Google sign-in requires localhost)
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [
     react(),
     VitePWA({

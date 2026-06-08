@@ -1,8 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { auth } from "../firebase"
 import { useNavigate, Link } from "react-router-dom"
 import { useLanguage } from '../LanguageContext'
+import { firebaseInitError } from '../firebase'
+import { ensureLocalhostForAuth, getAuthErrorMessage } from '../authHelpers'
 
 export default function SignIn() {
   const { lang } = useLanguage()
@@ -11,33 +13,41 @@ export default function SignIn() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    ensureLocalhostForAuth()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setLoading(true)
     try {
+      if (!auth) throw new Error('Authentication not configured')
       await signInWithEmailAndPassword(auth, email, password)
       navigate("/dashboard")
     } catch (err) {
-      if (err.code === "auth/user-not-found") setError("No account found.")
-      else if (err.code === "auth/wrong-password") setError("Wrong password.")
-      else if (err.code === "auth/invalid-credential") setError("Invalid email or password.")
-      else setError("Sign in failed. Please try again.")
+      setError(getAuthErrorMessage(err, isUr))
     }
     setLoading(false)
   }
 
   const handleGoogle = async () => {
     setError("")
+    if (ensureLocalhostForAuth()) return
+    setGoogleLoading(true)
     try {
+      if (!auth) throw new Error('Authentication not configured')
       const provider = new GoogleAuthProvider()
       provider.setCustomParameters({ prompt: "select_account" })
       await signInWithPopup(auth, provider)
       navigate("/dashboard")
     } catch (err) {
-      setError("Google sign-in failed.")
+      setError(getAuthErrorMessage(err, isUr))
+    } finally {
+      setGoogleLoading(false)
     }
   }
 
@@ -59,6 +69,11 @@ export default function SignIn() {
         boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
       }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          {firebaseInitError && (
+            <div style={{ background: '#fff7e6', border: '1px solid #ffecb5', color: '#7a4b00', padding: '8px', borderRadius: 8, marginBottom: 12 }}>
+              Firebase not configured: {firebaseInitError}. Google sign-in will not work until you set VITE_FIREBASE_* env vars and add localhost to OAuth domains.
+            </div>
+          )}
           <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a2e1a" }}>
             {isUr ? "خوش آمدید" : "Welcome Back"}
           </h2>
@@ -135,16 +150,22 @@ export default function SignIn() {
         </form>
 
         <button
+          type="button"
           onClick={handleGoogle}
+          disabled={googleLoading || loading}
           style={{
             width: "100%", padding: "13px", marginTop: "12px",
             background: "white", border: "1.5px solid #e0e8dc",
             borderRadius: "8px", fontSize: "15px", fontWeight: "600",
-            cursor: "pointer", color: "#333", display: "flex",
+            cursor: googleLoading || loading ? "not-allowed" : "pointer",
+            opacity: googleLoading || loading ? 0.7 : 1,
+            color: "#333", display: "flex",
             alignItems: "center", justifyContent: "center", gap: "8px"
           }}
         >
-          <span>🔵</span> {isUr ? "گوگل کے ساتھ سائن ان کریں" : "Sign in with Google"}
+          <span>🔵</span> {googleLoading
+            ? (isUr ? "گوگل سائن ان ہو رہا ہے..." : "Signing in with Google...")
+            : (isUr ? "گوگل کے ساتھ سائن ان کریں" : "Sign in with Google")}
         </button>
 
         <p style={{ textAlign: "center", marginTop: "24px", 

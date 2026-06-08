@@ -27,11 +27,26 @@ export default function Diagnose() {
 
   // Get current user for Firestore
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser)
-      console.log('User state changed:', firebaseUser?.uid || 'No user')
-    })
-    return unsubscribe
+    if (!auth) {
+      setUser(null)
+      console.log('Auth not initialized; running anonymously')
+      return
+    }
+
+    let unsubscribe = () => {}
+    try {
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser)
+        console.log('User state changed:', firebaseUser?.uid || 'No user')
+      })
+    } catch (e) {
+      console.error('Auth listener error in Diagnose:', e)
+    }
+    return () => {
+      try {
+        unsubscribe()
+      } catch (e) {}
+    }
   }, [])
 
   const revokePreview = useCallback(() => {

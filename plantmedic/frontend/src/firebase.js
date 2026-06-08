@@ -2,34 +2,40 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 
-// Firebase configuration - prefer Vite env vars in production, fallback to current values
+// Prefer Vite env vars; fall back to project defaults so local dev works without .env
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyDRNM7KpH83BMQWoEyVZXGqSdAmmQfQHj0',
+  authDomain: 'leaflens-81f54.firebaseapp.com',
+  projectId: 'leaflens-81f54',
+  storageBucket: 'leaflens-81f54.firebasestorage.app',
+  messagingSenderId: '1039809872546',
+  appId: '1:1039809872546:web:f3ff3c2ae148feb485cdfb',
+  measurementId: 'G-G1V7E32824',
+}
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_FIREBASE_CONFIG.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_CONFIG.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_FIREBASE_CONFIG.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || DEFAULT_FIREBASE_CONFIG.measurementId,
 }
 
 // Initialize Firebase
 let app, auth, db;
+let firebaseInitError = null
 
 try {
-  console.log('Initializing Firebase with config:', firebaseConfig)
+  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    throw new Error('Missing Firebase apiKey or projectId')
+  }
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
   db = getFirestore(app)
 
-  // Configure auth settings
   auth.languageCode = 'en'
-
-  // Enable Email/Password authentication
-  auth.settings = {
-    signInFlow: 'popup',
-    persistence: 'local'
-  }
 
   console.log('Firebase initialized successfully:', {
     projectId: firebaseConfig.projectId,
@@ -40,6 +46,8 @@ try {
   })
 } catch (error) {
   console.error('Firebase initialization error:', error)
+  // Record the init error for UI to show helpful guidance
+  firebaseInitError = error && (error.code || error.message || String(error))
   // Fallback for development
   app = null
   auth = null
@@ -128,5 +136,5 @@ export const loadScansFromFirestore = async (userId) => {
   }
 }
 
-export { auth, db }
+export { auth, db, firebaseInitError }
 export default app

@@ -55,7 +55,8 @@
     .chat-sidebar {
       display: none !important;
     }
-    .flex.h-screen {
+    .flex.h-screen,
+    .chat-layout {
       flex-direction: column;
     }
     .w-80 {

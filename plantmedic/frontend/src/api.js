@@ -1,8 +1,7 @@
 const DEFAULT_BASE = 'http://localhost:8000'
 
 export const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-// Support two possible env var names for historical reasons
-export const GROQ_KEY = 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
+export const GROQ_KEY = import.meta.env.VITE_GROQ_KEY || import.meta.env.VITE_GROQ_API
 
 export function getApiBase() {
   const fromEnv = import.meta.env.VITE_API_BASE_URL
@@ -124,7 +123,40 @@ function translateDiseaseToUrdu(diseaseName) {
 
 export { formatDiseaseName }
 
-export const sendChatMessage = async (message, scanResult, history) => {
+async function sendChatViaBackend(message, scanResult, history) {
+  const base = getApiBase()
+  const context = {}
+  if (scanResult) {
+    context.report = {
+      disease: scanResult.disease || scanResult.predicted_class,
+      confidence: scanResult.confidence,
+      treatment_en: scanResult.treatment_en,
+    }
+  }
+  if (history && Array.isArray(history)) {
+    context.history = history.slice(-6).map((msg) => ({
+      role: msg.role === 'assistant' ? 'assistant' : 'user',
+      content: String(msg.content || msg.text || ''),
+    }))
+  }
+
+  const res = await fetch(`${base}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: String(message), context }),
+  })
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    const detail = data?.detail || data?.message || `HTTP ${res.status}`
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+  }
+  if (!data?.response) throw new Error('Empty response from chat service')
+  return data.response
+}
+
+async function sendChatViaGroq(message, scanResult, history) {
+  if (!GROQ_KEY) throw new Error('Chat API key not configured')
 
   const systemPrompt = scanResult
     ? `You are LeafLens AI Assistant, expert in plant diseases. 
@@ -135,49 +167,92 @@ export const sendChatMessage = async (message, scanResult, history) => {
        Help farmers identify and treat plant diseases. 
        Be friendly, clear and professional.`
 
-  const messages = [
-    { role: "system", content: systemPrompt }
-  ]
+  const messages = [{ role: 'system', content: systemPrompt }]
 
   if (history && Array.isArray(history)) {
-    history.slice(-6).forEach(msg => {
+    history.slice(-6).forEach((msg) => {
       messages.push({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: String(msg.content || msg.text || "")
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: String(msg.content || msg.text || ''),
       })
     })
   }
 
-  messages.push({ role: "user", content: String(message) })
+  messages.push({ role: 'user', content: String(message) })
 
   const response = await fetch(GROQ_API_URL, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${GROQ_KEY}`
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROQ_KEY}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      messages: messages,
+      model: 'llama-3.1-8b-instant',
+      messages,
       max_tokens: 500,
-      temperature: 0.7
-    })
+      temperature: 0.7,
+    }),
   })
-  const data = await response.json().catch(() => null)
-  console.log("Groq response:", data, "status:", response.status)
 
+  const data = await response.json().catch(() => null)
   if (!response.ok) {
-    // Bubble up provider message if available, otherwise a generic status
     const msg = data?.error?.message || data?.message || `Chat API error: HTTP ${response.status}`
     throw new Error(msg)
   }
-
   if (data?.error) throw new Error(data.error.message)
 
   const text = data?.choices?.[0]?.message?.content
-  if (!text) throw new Error("Empty response from chat provider")
-
+  if (!text) throw new Error('Empty response from chat provider')
   return text
+}
+
+function localChatFallback(message, scanResult) {
+  const q = String(message || '').toLowerCase()
+  if (scanResult?.disease) {
+    const disease = scanResult.disease || scanResult.predicted_class
+    const conf = typeof scanResult.confidence === 'number'
+      ? Math.round(scanResult.confidence * (scanResult.confidence <= 1 ? 100 : 1))
+      : scanResult.confidence
+    const treatment = scanResult.treatment_en || 'Consult a local agricultural expert for treatment.'
+    return (
+      `Based on your recent scan (${disease}, ${conf}% confidence):\n\n` +
+      `${treatment}\n\n` +
+      `Ask me follow-up questions about watering, fertilizer, or prevention.`
+    )
+  }
+  if (/(healthy|health|percentage|percent)/.test(q)) {
+    return (
+      'To check plant health, upload a clear leaf photo on the Diagnose page. ' +
+      'LeafLens will show disease name, confidence, and a health score.'
+    )
+  }
+  if (/(treatment|treat|medicine|spray|fertiliz)/.test(q)) {
+    return (
+      'For treatment advice, scan your leaf on the Diagnose page first. ' +
+      'I can then explain the disease and suggest practical steps.'
+    )
+  }
+  if (/(urdu|translate)/.test(q)) {
+    return 'Use the English/Urdu toggle in the top navigation to switch the app language.'
+  }
+  return (
+    "Assalam-o-Alaikum! I'm LeafLens AI. Upload a leaf image on Diagnose for disease detection, " +
+    'or ask about watering, fertilizer, seasonal diseases, and crop care.'
+  )
+}
+
+export const sendChatMessage = async (message, scanResult, history) => {
+  try {
+    return await sendChatViaBackend(message, scanResult, history)
+  } catch (backendError) {
+    console.warn('Backend chat failed, trying Groq fallback:', backendError.message)
+    try {
+      return await sendChatViaGroq(message, scanResult, history)
+    } catch (groqError) {
+      console.warn('Groq chat failed, using local fallback:', groqError.message)
+      return localChatFallback(message, scanResult)
+    }
+  }
 }
 
 export async function chatWithLeafLens(message, context = {}) {
