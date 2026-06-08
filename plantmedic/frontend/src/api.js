@@ -1,7 +1,8 @@
 const DEFAULT_BASE = 'http://localhost:8000'
 
 export const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-export const GROQ_KEY = import.meta.env.VITE_GROQ_KEY
+// Support two possible env var names for historical reasons
+export const GROQ_KEY = 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
 
 export function getApiBase() {
   const fromEnv = import.meta.env.VITE_API_BASE_URL
@@ -162,14 +163,19 @@ export const sendChatMessage = async (message, scanResult, history) => {
       temperature: 0.7
     })
   })
+  const data = await response.json().catch(() => null)
+  console.log("Groq response:", data, "status:", response.status)
 
-  const data = await response.json()
-  console.log("Groq response:", data)
+  if (!response.ok) {
+    // Bubble up provider message if available, otherwise a generic status
+    const msg = data?.error?.message || data?.message || `Chat API error: HTTP ${response.status}`
+    throw new Error(msg)
+  }
 
-  if (data.error) throw new Error(data.error.message)
+  if (data?.error) throw new Error(data.error.message)
 
   const text = data?.choices?.[0]?.message?.content
-  if (!text) throw new Error("Empty response")
+  if (!text) throw new Error("Empty response from chat provider")
 
   return text
 }
